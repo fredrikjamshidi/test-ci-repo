@@ -13,21 +13,21 @@ jobs:
       packages: write
 
     steps:
-      - name: Get repo name
-        run: echo "REPO=${GITHUB_REPOSITORY@L}" >> "$GITHUB_ENV"
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Install skopeo
+      - name: Extract image digest
         run: |
-          sudo apt-get update
-          sudo apt-get install -y skopeo
-
-      - name: Retag image latest-rc -> latest (server-side copy)
+          export IMAGE_TAG=ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}:latest-rc
+          export IMAGE_DIGEST=$(skopeo inspect docker://${IMAGE_TAG} | jq -r '.Digest')
+          echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
         env:
-          SRC_IMAGE: ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}:latest-rc
-          DEST_IMAGE: ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}:latest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add latest tag
         run: |
-          skopeo copy \
-            --src-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-            --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-            docker://${SRC_IMAGE} \
-            docker://${DEST_IMAGE}
+          export REPO=ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}
+          echo "Promoting image $REPO@${IMAGE_DIGEST} to $REPO:latest"
+          skopeo copy docker://${REPO}@${IMAGE_DIGEST} docker://${REPO}:latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
