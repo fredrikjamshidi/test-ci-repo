@@ -14,20 +14,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Extract image digest
+      - name: Install Crane
         run: |
-          export IMAGE_TAG=ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}:latest-rc
-          export IMAGE_DIGEST=$(skopeo inspect docker://${IMAGE_TAG} | jq -r '.Digest')
-          echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          curl -LO https://github.com/google/go-containerregistry/releases/download/v0.13.0/go-containerregistry_Linux_x86_64.tar.gz
+          tar -xzf go-containerregistry_Linux_x86_64.tar.gz crane
+          chmod +x crane
+          sudo mv crane /usr/local/bin/
 
-      - name: Add latest tag
+      - name: Authenticate to GitHub Container Registry
         run: |
-          export REPO=ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}
-          echo "Promoting image $REPO@${IMAGE_DIGEST} to $REPO:latest"
-          skopeo copy docker://${REPO}@${IMAGE_DIGEST} docker://${REPO}:latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Promote Image
+        run: |
+          crane cp ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}:latest-rc ghcr.io/${{ github.repository }}/${{ vars.PRODUCT_NAME }}:latest
