@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')" # Required since staging-sync creates a commit which we don't want to run the build with as it's unnecessary 
     runs-on: ubuntu-latest
     permissions:
       contents: read
