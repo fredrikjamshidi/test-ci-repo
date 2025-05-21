@@ -45,6 +45,7 @@ jobs:
             ghcr.io/${{ env.REPO }}/${{ vars.PRODUCT_NAME }}:latest-rc
             ghcr.io/${{ env.REPO }}/${{ vars.PRODUCT_NAME }}:${{ vars.VERSION }}-${{ env.SHORT_SHA }}
   deploy:
+    runs-on: self-hosted
     steps:
     - name: Login to GHCR
       run:  echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
