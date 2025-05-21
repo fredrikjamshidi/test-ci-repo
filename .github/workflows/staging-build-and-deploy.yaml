@@ -1,4 +1,4 @@
-name: Build Staging
+name: Build and deploy Staging
 on:
   push:
     branches: 
@@ -44,3 +44,18 @@ jobs:
           tags: |
             ghcr.io/${{ env.REPO }}/${{ vars.PRODUCT_NAME }}:latest-rc
             ghcr.io/${{ env.REPO }}/${{ vars.PRODUCT_NAME }}:${{ vars.VERSION }}-${{ env.SHORT_SHA }}
+  deploy:
+    steps:
+    - name: Login to GHCR
+      run:  echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+
+    - name: Run Docker Compose
+      run: |
+        export DB_USER=${{ vars.DB_USER }}
+        export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        export DB_PORT=${{ vars.DB_PORT }}
+        export DB_NAME=${{ vars.DB_NAME }}
+        export APP_PORT=${{ vars.APP_PORT }}
+        export APP_IMAGAE=${{ vars.APP_IMAGAE }}
+        export API_TOKEN=${{ vars.API_TOKEN }}
+        docker compose up -d 
