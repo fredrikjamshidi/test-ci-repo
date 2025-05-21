@@ -54,7 +54,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
       - name: Run Docker Compose
         run: |
           export DB_USER=${{ vars.DB_USER }}
@@ -62,6 +61,6 @@ jobs:
           export DB_PORT=${{ vars.DB_PORT }}
           export DB_NAME=${{ vars.DB_NAME }}
           export APP_PORT=${{ vars.APP_PORT }}
-          export APP_IMAGAE=${{ vars.APP_IMAGAE }}
+          export APP_IMAGAE=${{ vars.APP_IMAGE }}
           export API_TOKEN=${{ vars.API_TOKEN }}
           docker compose up -d 
